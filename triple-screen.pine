@@ -68,11 +68,6 @@ float stra_fast_ma_last_element = na
 float stra_slow_ma_last_element = na
 
 if barstate.islast
-    // Debuging code
-    // label.new(bar_index, 0, "size: " + str.tostring(array.size(stra_fast_ma_array)) 
-    //      + "\n value:" + str.tostring(array.get(stra_fast_ma_array, array.size(stra_fast_ma_array) - 1)
-    //      ))
-    
     // moving average
     stra_fast_ma_last_element           :=  array.get(stra_fast_ma_array, array.size(stra_fast_ma_array) - 1)
     stra_slow_ma_last_element           :=  array.get(stra_slow_ma_array, array.size(stra_slow_ma_array) - 1)
@@ -132,6 +127,10 @@ stra_hist_text      = stra_hist_last_element > stra_hist_second_last_element    
 stra_hist_color     = stra_hist_last_element > stra_hist_second_last_element    ? color.lime : color.red
 stra_macd_text      = stra_macd_last_element > 0                                ? "Above": "Under"
 stra_macd_color     = stra_macd_last_element > 0                                ? color.lime : color.red
+stra_impluse_color  = ((stra_close > stra_fast_ma_last_element) and (stra_close > stra_slow_ma_last_element) and (stra_hist_last_element > stra_hist_second_last_element)) ? 
+                     color.lime : ((stra_close < stra_fast_ma_last_element) and (stra_close < stra_slow_ma_last_element) and (stra_hist_last_element < stra_hist_second_last_element)) ? 
+                     color.red : color.aqua
+
 //  ----------- tactical screening condition  -----------
 tact_fast_ma_text   = close > tact_fast_ma      ? "Above": "Under"
 tact_fast_ma_color  = close > tact_fast_ma      ? color.lime : color.red
@@ -141,33 +140,40 @@ tact_hist_text      = tact_hist > tact_hist[1]  ? "Slope Up": "Slope Down"
 tact_hist_color     = tact_hist > tact_hist[1]  ? color.lime : color.red
 tact_macd_text      = tact_macd > 0             ? "Above": "Under"
 tact_macd_color     = tact_macd > 0             ? color.lime : color.red
+tact_impluse_color  = ((close > tact_fast_ma) and (close > tact_slow_ma) and (tact_hist > tact_hist[1])) ?
+                     color.lime : ((close < tact_fast_ma) and (close < tact_slow_ma) and (tact_hist < tact_hist[1])) ?
+                     color.red : color.aqua
 
 var table my_table = table.new(position=position.middle_right, columns=2, rows=12, border_width = 1)
 if (barstate.islast) and (show_table)
     // Strategic header
-    table.cell(my_table, column=0, row=0, text="Strategic Level",   bgcolor = color.black, text_color = color.white)
-    table.cell(my_table, column=0, row=1, text="MA Fast",           bgcolor = color.black, text_color = color.white)
-    table.cell(my_table, column=0, row=2, text="MA Slow",           bgcolor = color.black, text_color = color.white)
-    table.cell(my_table, column=0, row=3, text="MACD Hist.",        bgcolor = color.black, text_color = color.white)
-    table.cell(my_table, column=0, row=4, text="MACD Zero-Line",         bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=0, text="Strategic Level",                                           bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=1, text="MA " + str.tostring(stra_fast_ma_length) + " Fast",         bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=2, text="MA " + str.tostring(stra_slow_ma_length) + " Slow",         bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=3, text="MACD Hist.",                                                bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=4, text="MACD Zero-Line",                                            bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=5, text="Impluse",                                                   bgcolor = color.black, text_color = color.white)
     // Tactical header
-    table.cell(my_table, column=0, row=5, text="Tactical Level",        bgcolor = color.black, text_color = color.white)
-    table.cell(my_table, column=0, row=6, text="MA Fast",        bgcolor = color.black, text_color = color.white)
-    table.cell(my_table, column=0, row=7, text="MA Slow",        bgcolor = color.black, text_color = color.white)
-    table.cell(my_table, column=0, row=8, text="MACD Hist.",        bgcolor = color.black, text_color = color.white)
-    table.cell(my_table, column=0, row=9, text="MACD Zero-Line",        bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=6,   text="Tactical Level",                                            bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=7,   text="MA " + str.tostring(tact_fast_ma_length) + " Fast",         bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=8,   text="MA " + str.tostring(tact_slow_ma_length) + " Slow",         bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=9,   text="MACD Hist",                                                 bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=10,  text="MACD Zero-Line",                                            bgcolor = color.black, text_color = color.white)
+    table.cell(my_table, column=0, row=11,  text="Impluse",                                                   bgcolor = color.black, text_color = color.white)
     
     // Strategic value
     table.cell(my_table, column=1, row=1, text=stra_fast_ma_text,   bgcolor = color.black, text_color = stra_fast_ma_color)
     table.cell(my_table, column=1, row=2, text=stra_slow_ma_text,   bgcolor = color.black, text_color = stra_slow_ma_color)
     table.cell(my_table, column=1, row=3, text=stra_hist_text,      bgcolor = color.black, text_color = stra_hist_color)
     table.cell(my_table, column=1, row=4, text=stra_macd_text,      bgcolor = color.black, text_color = stra_macd_color)
+    table.cell(my_table, column=1, row=5,                           bgcolor = stra_impluse_color, text_color = stra_macd_color)
 
     // Tacitical value
-    table.cell(my_table, column=1, row=6, text=tact_fast_ma_text,   bgcolor = color.black, text_color = tact_fast_ma_color)
-    table.cell(my_table, column=1, row=7, text=tact_slow_ma_text,   bgcolor = color.black, text_color = tact_slow_ma_color)
-    table.cell(my_table, column=1, row=8, text=tact_hist_text,      bgcolor = color.black, text_color = tact_hist_color)
-    table.cell(my_table, column=1, row=9, text=tact_macd_text,      bgcolor = color.black, text_color = tact_macd_color)
+    table.cell(my_table, column=1, row=7,   text=tact_fast_ma_text,   bgcolor = color.black, text_color = tact_fast_ma_color)
+    table.cell(my_table, column=1, row=8,   text=tact_slow_ma_text,   bgcolor = color.black, text_color = tact_slow_ma_color)
+    table.cell(my_table, column=1, row=9,   text=tact_hist_text,      bgcolor = color.black, text_color = tact_hist_color)
+    table.cell(my_table, column=1, row=10,  text=tact_macd_text,      bgcolor = color.black, text_color = tact_macd_color)
+    table.cell(my_table, column=1, row=11,                            bgcolor = tact_impluse_color, text_color = stra_macd_color)
 
     // rechecked value of MACD
     // table.cell(my_table, column=1, row=7, text=str.tostring(math.round(array.get(stra_macd_array, array.size(stra_macd_array) - 1), 2)),        bgcolor = color.black, text_color = color.white)
@@ -176,7 +182,7 @@ if (barstate.islast) and (show_table)
     
     // merge cell
     table.merge_cells(my_table, 0, 0, 1, 0)
-    table.merge_cells(my_table, 0, 5, 1, 5)
+    table.merge_cells(my_table, 0, 6, 1, 6)
 
 //#endregion
 // -------------------------------------
