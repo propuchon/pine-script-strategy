@@ -1,0 +1,74 @@
+// ————————————————————————————————————————————————————————————————
+// This source code is subject to the terms of the Mozilla Public License 2.0
+// © yourusername
+// ————————————————————————————————————————————————————————————————
+
+//@version=6
+strategy("Strategy Template"
+     , overlay = true
+     , initial_capital = 100000
+     , margin_long = 0
+     , margin_short = 0
+     , commission_type = strategy.cash_per_contract
+     , commission_value = 43.1
+     , default_qty_value = 2)
+
+
+//-----------------------------------------------------------------------------
+// Constants 
+//-----------------------------------------------------------------------------
+const string TZ_BANGKOK = "UTC+7"
+
+//-----------------------------------------------------------------------------
+// Inputs 
+//-----------------------------------------------------------------------------
+backtestGroup        = "Backtest Range"
+startDate            = input.time( timestamp("01 Jan 2020 00:00 +0000"),      title = "Start",              group = backtestGroup)
+endDate              = input.time( timestamp("31 Dec 2030 00:00 +0000"),      title = "End",                group = backtestGroup)
+
+sessionGroup             = "Trading Session"
+enabledTradingSession    = input.bool(true, "Enable Trading Session", group=sessionGroup)
+timeRangeTradingSession1 = input.session("1005-1600", "Trading Session 1", group=sessionGroup)
+
+strategyGroup = "Strategy"
+slInput     = input.int(defval = 1000,         title = "SL",      minval = 0, step = 1, group = strategyGroup)
+tpInput     = input.int(defval = 1000,         title = "TP",      minval = 0, step = 1, group = strategyGroup)
+
+//-----------------------------------------------------------------------------
+// Functions 
+//-----------------------------------------------------------------------------
+BacktestingDate(int train_start_date, int train_end_date) => 
+	time >= train_start_date and time <= train_end_date
+
+f_noRepaintSecurity(simple string symbol, simple string timeframe, series float expression) =>
+    request.security(symbol, timeframe, expression, lookahead = barmerge.lookahead_on)
+
+isTimeInSession(simple string session, simple string tz) =>
+    not na(time(timeframe.period, session, tz))
+
+GetTickValue() =>
+    syminfo.mintick * syminfo.pointvalue
+
+//-----------------------------------------------------------------------------
+// Calculations 
+//-----------------------------------------------------------------------------
+// Backtesting Range
+isBacktestDate = BacktestingDate(startDate, endDate)
+inSession1 = isTimeInSession(timeRangeTradingSession1, TZ_BANGKOK)
+
+//-----------------------------------------------------------------------------
+// Strategy 
+//-----------------------------------------------------------------------------
+
+
+
+// Close all positions and cancel all orders outside backtesting range or outside trading session
+if not isBacktestDate or (enabledTradingSession and not inSession1)
+    strategy.cancel_all()
+    strategy.close_all()
+    
+//-----------------------------------------------------------------------------
+// Visualizations 
+//-----------------------------------------------------------------------------
+bgcolor(isBacktestDate ? color.new(color.white, 95) : na, title = "Backtesting Range", display = display.none)
+bgcolor(enabledTradingSession and inSession1 ? color.new(color.blue, 90) : na, title = "Trading Session 1", display = display.none)
